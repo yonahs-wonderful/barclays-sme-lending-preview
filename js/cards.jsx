@@ -286,7 +286,7 @@ function PaymentCard({ data, ctx }) {
   };
 
   return (
-    <CardShell icon={<CCard size={20} />} label="Facility account"
+    <CardShell className="account-selector" icon={<CCard size={20} />} label="Facility account"
       title={confirmed ? "Facility account confirmed" : "Confirm the account linked to this RCF"}
       caption={confirmed ? null : "Choose the " + brandName() + " account where the amended facility will sit."}>
       <div className="paysel">

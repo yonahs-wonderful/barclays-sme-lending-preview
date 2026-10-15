@@ -2406,3 +2406,6 @@ button { font-family: inherit; cursor: pointer; }
   .bubble.agent { animation: none; }
   .chat-scroll { scroll-behavior: auto; }
 }
+
+/* The viewport supplies the account reveal motion; keep the card stationary. */
+.card.account-selector { animation: none; }

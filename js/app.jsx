@@ -203,18 +203,43 @@ function App({ brand, persona, transport, loanOptions, posOffer, disbursementAcc
   React.useEffect(() => {
     // Coalesce nearby message/typing updates instead of restarting the
     // bottom-follow animation four times while the layout is settling.
+    let frame;
+    const el = scrollRef.current;
+    const cancelMotion = () => cancelAnimationFrame(frame);
+    el?.addEventListener("wheel", cancelMotion, { passive: true });
+    el?.addEventListener("touchstart", cancelMotion, { passive: true });
     const timer = setTimeout(() => {
       const el = scrollRef.current;
       const bottom = bottomRef.current;
       if (!el || !bottom) return;
       // Keep the existing end-marker alignment without scrolling the page.
       const target = el.scrollTop + bottom.getBoundingClientRect().bottom - el.getBoundingClientRect().bottom;
-      el.scrollTo({
-        top: Math.max(0, target),
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
-      });
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const last = items[items.length - 1];
+      const accountReveal = last?.kind === "card" && last.card.type === "payment_details";
+      if (!accountReveal || reducedMotion) {
+        el.scrollTo({ top: Math.max(0, target), behavior: reducedMotion ? "instant" : "smooth" });
+        return;
+      }
+      // Browser-native smooth scrolling rushes this unusually tall widget.
+      // Give its reveal a fixed, gentle duration with zero velocity at both ends.
+      const start = el.scrollTop;
+      const end = Math.max(0, Math.min(target, el.scrollHeight - el.clientHeight));
+      const started = performance.now();
+      const animate = (now) => {
+        const t = Math.min(1, (now - started) / 1100);
+        const eased = t * t * t * (t * (t * 6 - 15) + 10);
+        el.scrollTo({ top: start + (end - start) * eased, behavior: "instant" });
+        if (t < 1) frame = requestAnimationFrame(animate);
+      };
+      frame = requestAnimationFrame(animate);
     }, 180);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      cancelMotion();
+      el?.removeEventListener("wheel", cancelMotion);
+      el?.removeEventListener("touchstart", cancelMotion);
+    };
   }, [items, typing]);
 
   async function step(input) {
