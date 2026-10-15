@@ -116,7 +116,7 @@ function Typing({ agent }) {
   );
 }
 
-// A completed uploader becomes compact. If it is already above the viewport,
+// A completed uploader becomes compact. If its top has scrolled out of view,
 // compensate its height change before paint so the visible reply cannot jump.
 function AnchoredUploader({ ctx }) {
   const ref = React.useRef(null);
@@ -128,8 +128,8 @@ function AnchoredUploader({ ctx }) {
     const height = node.getBoundingClientRect().height;
     const before = previousHeight.current;
     if (before !== null && height !== before) {
-      const oldBottom = node.getBoundingClientRect().top + before;
-      if (oldBottom <= scroller.getBoundingClientRect().top) {
+      const uploaderTop = node.getBoundingClientRect().top;
+      if (uploaderTop < scroller.getBoundingClientRect().top) {
         scroller.scrollTo({ top: scroller.scrollTop + height - before, behavior: "instant" });
       }
     }
