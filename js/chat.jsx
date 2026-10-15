@@ -116,6 +116,28 @@ function Typing({ agent }) {
   );
 }
 
+// A completed uploader becomes compact. If it is already above the viewport,
+// compensate its height change before paint so the visible reply cannot jump.
+function AnchoredUploader({ ctx }) {
+  const ref = React.useRef(null);
+  const previousHeight = React.useRef(null);
+  React.useLayoutEffect(() => {
+    const node = ref.current;
+    const scroller = ctx.scrollRef.current;
+    if (!node || !scroller) return;
+    const height = node.getBoundingClientRect().height;
+    const before = previousHeight.current;
+    if (before !== null && height !== before) {
+      const oldBottom = node.getBoundingClientRect().top + before;
+      if (oldBottom <= scroller.getBoundingClientRect().top) {
+        scroller.scrollTo({ top: scroller.scrollTop + height - before, behavior: "instant" });
+      }
+    }
+    previousHeight.current = height;
+  });
+  return <div ref={ref} style={{ width: "100%" }}><ChUploader ctx={ctx} /></div>;
+}
+
 function ChatLog({ items, typing, ctx, bottomRef }) {
   const agent = ctx.agent;
   const optionLoader = (
@@ -174,7 +196,7 @@ function ChatLog({ items, typing, ctx, bottomRef }) {
         if (it.kind === "uploader") {
           return (
             <div className="bubble-row agent card-row" key={it.id || i} style={{ width: "100%" }}>
-              <ChUploader ctx={ctx} />
+              <AnchoredUploader ctx={ctx} />
             </div>
           );
         }
