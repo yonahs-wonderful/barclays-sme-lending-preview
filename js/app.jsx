@@ -201,23 +201,20 @@ function App({ brand, persona, transport, loanOptions, posOffer, disbursementAcc
   const bottomRef = React.useRef(null);
 
   React.useEffect(() => {
-    const el = scrollRef.current;
-    const scroll = () => {
-      if (bottomRef.current && typeof bottomRef.current.scrollIntoView === "function") {
-        bottomRef.current.scrollIntoView({ block: "end" });
-      } else if (el) {
-        el.scrollTop = el.scrollHeight;
-      }
-    };
-    scroll();
-    const raf1 = requestAnimationFrame(scroll);
-    const raf2 = requestAnimationFrame(() => requestAnimationFrame(scroll));
-    const timer = setTimeout(scroll, 160);
-    return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      clearTimeout(timer);
-    };
+    // Coalesce nearby message/typing updates instead of restarting the
+    // bottom-follow animation four times while the layout is settling.
+    const timer = setTimeout(() => {
+      const el = scrollRef.current;
+      const bottom = bottomRef.current;
+      if (!el || !bottom) return;
+      // Keep the existing end-marker alignment without scrolling the page.
+      const target = el.scrollTop + bottom.getBoundingClientRect().bottom - el.getBoundingClientRect().bottom;
+      el.scrollTo({
+        top: Math.max(0, target),
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+      });
+    }, 180);
+    return () => clearTimeout(timer);
   }, [items, typing]);
 
   async function step(input) {
