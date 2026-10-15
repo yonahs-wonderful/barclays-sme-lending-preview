@@ -236,9 +236,15 @@ function App({ brand, persona, transport, loanOptions, posOffer, disbursementAcc
     await sleep(pacedJitter(820, 420));
     setTyping(false);
     const evs = turn.events || [];
+    // Mount the account selector with its introduction, avoiding a second
+    // large layout shift while the message is still entering the chat.
+    const inlineAccount = !isRecognition && evs.length
+      ? cards.find((card) => card.type === "payment_details") : null;
     for (let i = 0; i < evs.length; i++) {
       const ev = evs[i];
-      setItems((it) => it.concat([{ kind: "message", speaker: ev.speaker, text: ev.text }]));
+      const additions = [{ kind: "message", speaker: ev.speaker, text: ev.text }];
+      if (inlineAccount && i === evs.length - 1) additions.push({ kind: "card", card: inlineAccount });
+      setItems((it) => it.concat(additions));
       await sleep(paced(i === evs.length - 1 ? 140 : 520));
     }
 
@@ -294,7 +300,7 @@ function App({ brand, persona, transport, loanOptions, posOffer, disbursementAcc
         const panelOnly = card.type === "claim_type_identified" || card.type === "cover_status"
           || card.type === "claim_file_opened"
           || (card.type === "document_status" && card.data.status !== "issue");
-        if (!panelOnly) setItems((it) => it.concat([{ kind: "card", card: card }]));
+        if (!panelOnly && card !== inlineAccount) setItems((it) => it.concat([{ kind: "card", card: card }]));
         await sleep(paced(260));
       }
       // Right before the request is sent for assessment, offer an optional EFTPOS
