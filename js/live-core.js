@@ -37,6 +37,7 @@
     update_claim_status: "claim_lodged",
     trigger_claim_processing: "claim_lodged"
   };
+  var LENDING_TOOLS = ["lending_step", "prepare_rcf_application", "validate_management_accounts", "validate_signed_contract", "get_application_status", "submit_for_credit_review", "resume_application"];
   var SKIP = { switch_skill: true };
 
   function mapToolToCard(toolName, rawOutput) {
@@ -58,7 +59,7 @@
       if (d.type === "text") {
         if (ev.speaker === "agent" && d.text) out.events.push({ type: "message", speaker: "agent", text: d.text });
       } else if (d.type === "function_call" && d.function_call) {
-        if (d.function_call.name === "lending_step") {
+        if (LENDING_TOOLS.indexOf(d.function_call.name) !== -1) {
           var result = unwrapToolOutput(d.function_call.output);
           if (result && result.canonical_text) {
             if (canonical.indexOf(result.canonical_text) === -1) canonical.push(result.canonical_text);
