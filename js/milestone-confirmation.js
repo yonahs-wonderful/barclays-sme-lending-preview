@@ -5,8 +5,8 @@
     let disposed = false;
     return {
       schedule(card) {
-        if (typeof getMilestones !== 'function' || card.type !== 'claim_lodged' || !card.data?.task_id) return;
-        const id = card.data.task_id;
+        if (typeof getMilestones !== 'function' || card.type !== 'claim_lodged' || !card.data?.claim_ref) return;
+        const id = card.data.claim_ref + ':' + (card.data.submitted_at || card.data.task_id || 'demo');
         if (tracked.has(id)) return;
         const state = {sent: new Set(), timer: null, deadline: Date.now() + 60 * 60 * 1000};
         tracked.set(id, state);
@@ -18,7 +18,7 @@
             if (status.reference === card.data.claim_ref) {
               const milestones = [
                 ['approved', status.approved, 'James, your facility increase has been approved.'],
-                ['entry', status.entry_completed, 'James, your application entry in CoreBank is complete.']
+                ['entry', status.approved && status.entry_completed, 'James, your application entry in CoreBank is complete.']
               ];
               for (const [name, ready, text] of milestones) {
                 if (!ready || state.sent.has(name)) continue;

@@ -344,7 +344,7 @@ function ApplicationStatusTrackerCard({ data, ctx }) {
     steps: [
       {label: "Documents received", status: "done", detail: "2 uploaded, 6 reused"},
       {label: "Human credit decision", status: milestone.approved ? "done" : "active", detail: milestone.approved ? "Approved in the credit cockpit" : "Awaiting credit review"},
-      {label: "CoreBank application entry", status: milestone.entry ? "done" : "active", detail: milestone.entry ? "Back-office task completed successfully" : "Back-office processing"}
+      {label: "CoreBank application entry", status: milestone.entry ? "done" : milestone.approved ? "active" : "pending", detail: milestone.entry ? "Back-office task completed successfully" : milestone.approved ? "Back-office processing" : "Starts after human approval"}
     ]
   };
   const steps = trackerData.steps || [];
