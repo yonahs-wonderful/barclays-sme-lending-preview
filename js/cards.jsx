@@ -334,22 +334,13 @@ function trackerStatusLabel(status) {
   return "Pending";
 }
 
-const SUBMITTED_REVIEW_TRACKER_STEPS = [
-  { label: "Documents received", status: "done", detail: "2 uploaded, 6 reused" },
-  { label: "Under review", status: "active", detail: "Sarah Chen reviewing the credit memo" },
-  { label: "Approved", status: "pending", detail: "Waiting for Sarah decision" },
-  { label: "Facility booked", status: "pending", detail: "Starts after approval" },
-  { label: "Facility letter ready", status: "pending", detail: "Generated after booking" }
-];
-
 function ApplicationStatusTrackerCard({ data, ctx }) {
-  const fileStatus = ctx && ctx.file && ctx.file.status;
-  let trackerData = fileStatus === "submitted_for_assessment"
-    ? Object.assign({}, data, { current: "Under review", steps: SUBMITTED_REVIEW_TRACKER_STEPS })
-    : data;
-  const milestone = ctx?.milestones?.[data.claim_ref];
-  if (milestone) trackerData = {...trackerData,
-    current: milestone.approved ? (milestone.entry ? "Approved · application entry complete" : "Approved") : "Application entered · awaiting decision",
+  // Keep the same stages before and after the first live milestone arrives.
+  const milestone = ctx?.milestones?.[data.claim_ref] || {};
+  const trackerData = {...data,
+    current: milestone.approved
+      ? (milestone.entry ? "Approved · application entry complete" : "Approved")
+      : (milestone.entry ? "Application entered · awaiting decision" : "Under review"),
     steps: [
       {label: "Documents received", status: "done", detail: "2 uploaded, 6 reused"},
       {label: "Human credit decision", status: milestone.approved ? "done" : "active", detail: milestone.approved ? "Approved in the credit cockpit" : "Awaiting credit review"},
@@ -442,7 +433,7 @@ function ClaimLodgedCard({ data, ctx }) {
               <span className="l3-eta-k">{isBooked ? "Now available" : "Next · credit review expected"}</span>
               <span className="l3-eta-v">{isBooked ? `${newLimit} RCF limit` : etaDate}</span>
               <span className="l3-eta-sub">
-                {isBooked ? `Facility letter sent by secure message · ${data.claim_ref}` : "Decision expected today · Sarah reviews before CoreBank booking."}
+                {isBooked ? `Facility letter sent by secure message · ${data.claim_ref}` : "Credit decision and application entry are tracked below."}
               </span>
             </div>
           </div>
